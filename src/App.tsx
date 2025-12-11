@@ -13,6 +13,10 @@ function App() {
   const [editorLink, setEditorLink] = useState<string | null>(null);
   const { html, css, js, setHtml, setCss, setJs } = useCodeStore();
 
+    const defaultHtml = '<div class="container">\n  <h1>Welcome to HTML Studio</h1>\n  <p>Start editing to see some magic happen!</p>\n</div>';
+    const defaultCss = 'body {\n  font-family: system-ui, sans-serif;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  height: 100vh;\n  margin: 0;\n  background: #f0f0f0;\n}\n\n.container {\n  text-align: center;\n  background: white;\n  padding: 2rem;\n  border-radius: 8px;\n  box-shadow: 0 4px 6px rgba(0,0,0,0.1);\n}';
+    const defaultJs = 'console.log("Hello from HTML Studio!");';
+
   // Load shared code from URL hash or edit token on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -113,6 +117,17 @@ function App() {
     }
   };
 
+  const handleResetSession = () => {
+    localStorage.removeItem('html-studio-storage');
+    setHtml(defaultHtml);
+    setCss(defaultCss);
+    setJs(defaultJs);
+    setLiveLink(null);
+    setEditorLink(null);
+    window.history.replaceState({}, '', window.location.pathname);
+    toast.success('Session reset');
+  };
+
   const copyEditorLink = async () => {
     if (!editorLink) return;
     await navigator.clipboard.writeText(editorLink);
@@ -142,6 +157,12 @@ function App() {
           <span className="font-bold text-lg tracking-tight">HTML Studio</span>
         </div>
          <div className="flex gap-2">
+            <button
+              onClick={handleResetSession}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded text-sm transition-colors border border-gray-700"
+            >
+              New
+            </button>
            <button 
              onClick={handleDownload}
              className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded text-sm transition-colors border border-gray-700"
