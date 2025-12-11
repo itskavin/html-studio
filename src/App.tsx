@@ -54,14 +54,22 @@ function App() {
   const handleShare = async () => {
     try {
       const data = { html, css, js };
-      const encoded = btoa(JSON.stringify(data));
-      const shareUrl = `${window.location.origin}${window.location.pathname}#${encoded}`;
+      const response = await fetch('/api/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) throw new Error('Failed to save code');
+      
+      const { id } = await response.json();
+      const shareUrl = `${window.location.origin}/view/${id}`;
       
       await navigator.clipboard.writeText(shareUrl);
-      toast.success('Share link copied to clipboard!');
+      toast.success('Share link copied! Short link: ' + id);
     } catch (e) {
-      console.error('Failed to copy:', e);
-      toast.error('Failed to copy share link');
+      console.error('Failed to create share link:', e);
+      toast.error('Failed to create share link');
     }
   };
 
