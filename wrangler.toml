@@ -8,3 +8,18 @@ bucket = "./dist"
 [[kv_namespaces]]
 binding = "CODE_STORE"
 id = "04758e1161ff4f6786e491342f7724fa"
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+persist = true
+head_sampling_rate = 1
