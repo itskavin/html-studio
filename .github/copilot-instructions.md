@@ -20,6 +20,11 @@ HTML Studio is a live HTML/CSS/JS editor with real-time preview, built as a Reac
 - Full HTML document constructed with inline `<style>` and `<script>` tags
 - JavaScript wrapped in try-catch to prevent preview crashes
 
+**Share Feature**:
+- Encodes HTML/CSS/JS to base64 JSON in URL hash (`#` fragment)
+- On mount, checks for hash and decodes to load shared code
+- Copies shareable URL to clipboard via `navigator.clipboard.writeText()`
+
 ## Key Development Patterns
 
 ### Monaco Editor Integration
@@ -60,6 +65,7 @@ npm run deploy      # Build + deploy to Cloudflare Workers
 - Static assets served via [src/worker.js](../src/worker.js) using `@cloudflare/kv-asset-handler`
 - Config: [wrangler.toml](../wrangler.toml) points to `dist/` bucket
 - **Critical**: Worker uses CommonJS syntax (`export default { async fetch() }`)
+- Worker handles SPA routing: serves `index.html` for paths without extensions and 404 fallback
 
 ## Critical Gotchas
 
@@ -81,6 +87,8 @@ npm run deploy      # Build + deploy to Cloudflare Workers
 **New editor tabs**: Add to tab array in [App.tsx](../src/App.tsx), extend `activeTab` type, add store state slice
 
 **Toast notifications**: Use `react-hot-toast` (already configured), see `handleDownload` example
+
+**URL-based sharing**: Share feature uses base64-encoded JSON in URL hash - see `handleShare` and mount effect in [App.tsx](../src/App.tsx)
 
 ## TypeScript Configuration
 - Strict mode enabled (`tsconfig.json`)

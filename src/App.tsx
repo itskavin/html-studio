@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { CodeEditor } from './components/CodeEditor';
 import { Preview } from './components/Preview';
@@ -10,6 +10,24 @@ import toast, { Toaster } from 'react-hot-toast';
 function App() {
   const [activeTab, setActiveTab] = useState<'html' | 'css' | 'js'>('html');
   const { html, css, js, setHtml, setCss, setJs } = useCodeStore();
+
+  // Load shared code from URL hash on mount
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      try {
+        const decoded = atob(hash);
+        const data = JSON.parse(decoded);
+        if (data.html !== undefined) setHtml(data.html);
+        if (data.css !== undefined) setCss(data.css);
+        if (data.js !== undefined) setJs(data.js);
+        toast.success('Loaded shared code!');
+      } catch (e) {
+        console.error('Failed to load shared code:', e);
+        toast.error('Invalid share link');
+      }
+    }
+  }, []);
 
   const handleDownload = () => {
     const fullHtml = `
@@ -33,6 +51,20 @@ function App() {
     toast.success('Downloaded index.html');
   };
 
+  const handleShare = async () => {
+    try {
+      const data = { html, css, js };
+      const encoded = btoa(JSON.stringify(data));
+      const shareUrl = `${window.location.origin}${window.location.pathname}#${encoded}`;
+      
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Share link copied to clipboard!');
+    } catch (e) {
+      console.error('Failed to copy:', e);
+      toast.error('Failed to copy share link');
+    }
+  };
+
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-900 text-white overflow-hidden">
       <Toaster position="bottom-right" />
@@ -49,7 +81,10 @@ function App() {
            >
              <Download size={14} /> Download
            </button>
-           <button className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-sm transition-colors font-medium">
+           <button 
+             onClick={handleShare}
+             className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded text-sm transition-colors font-medium"
+           >
              <Share2 size={14} /> Share
            </button>
         </div>
