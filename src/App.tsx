@@ -4,6 +4,7 @@ import { CodeEditor } from './components/CodeEditor';
 import { Preview } from './components/Preview';
 import { useCodeStore } from './store/useCodeStore';
 import { Code2, FileCode, FileJson, Download, Share2 } from 'lucide-react';
+import JSZip from 'jszip';
 import clsx from 'clsx';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -65,26 +66,49 @@ function App() {
     }
   }, [setHtml, setCss, setJs]);
 
-  const handleDownload = () => {
-    const fullHtml = `
-<!DOCTYPE html>
-<html>
-  <head>
-    <style>${css}</style>
-  </head>
-  <body>
-    ${html}
-    <script>${js}</script>
-  </body>
-</html>`;
-    const blob = new Blob([fullHtml], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'index.html';
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Downloaded index.html');
+  const handleDownload = async () => {
+    const files: { name: string; content: string; type: string }[] = [];
+
+    const trimmedHtml = html?.trim();
+    const trimmedCss = css?.trim();
+    const trimmedJs = js?.trim();
+
+    if (trimmedHtml && trimmedHtml !== defaultHtml.trim()) {
+      files.push({ name: 'index.html', content: trimmedHtml, type: 'text/html' });
+    }
+    if (trimmedCss && trimmedCss !== defaultCss.trim()) {
+      files.push({ name: 'style.css', content: trimmedCss, type: 'text/css' });
+    }
+    if (trimmedJs && trimmedJs !== defaultJs.trim()) {
+      files.push({ name: 'script.js', content: trimmedJs, type: 'application/javascript' });
+    }
+
+    if (files.length === 0) {
+      toast.error('No changes to download');
+      return;
+    }
+
+    const downloadBlob = (blob: Blob, filename: string) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    if (files.length === 1) {
+      const file = files[0];
+      downloadBlob(new Blob([file.content], { type: file.type }), file.name);
+      toast.success(`Downloaded ${file.name}`);
+      return;
+    }
+
+    const zip = new JSZip();
+    files.forEach((file) => zip.file(file.name, file.content));
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    downloadBlob(zipBlob, 'code.zip');
+    toast.success('Downloaded code.zip');
   };
 
   const handleShare = async () => {
